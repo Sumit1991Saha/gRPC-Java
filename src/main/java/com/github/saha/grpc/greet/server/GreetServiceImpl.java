@@ -8,6 +8,7 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
     @Override
     public void greet(GreetRequest request, StreamObserver<GreetResponse> responseObserver) {
         System.out.println("Greet Unary request received");
+
         // extract the fields we need
         Greeting greeting = request.getGreeting();
         String firstName = greeting.getFirstName();
@@ -29,6 +30,7 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
     @Override
     public void greetManyTimes(GreetManyTimesRequest request, StreamObserver<GreetManyTimesResponse> responseObserver) {
         System.out.println("Greet Many times request received");
+
         // extract the fields we need
         Greeting greeting = request.getGreeting();
         String firstName = greeting.getFirstName();
