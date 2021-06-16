@@ -1,10 +1,7 @@
 package com.github.saha.grpc.greet.client;
 
 import com.proto.dummy.DummyServiceGrpc;
-import com.proto.greet.GreetRequest;
-import com.proto.greet.GreetResponse;
-import com.proto.greet.GreetServiceGrpc;
-import com.proto.greet.Greeting;
+import com.proto.greet.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -28,7 +25,8 @@ public class GreetingClient {
         //DummyServiceGrpc.DummyServiceFutureStub asyncClient = DummyServiceGrpc.newFutureStub(channel);
 
         GreetServiceGrpc.GreetServiceBlockingStub syncClient = GreetServiceGrpc.newBlockingStub(channel);
-        doUnary(syncClient);
+        //doUnary(syncClient);
+        doServerStreaming(syncClient);
 
         System.out.println("Shutting down channel");
         channel.shutdown();
@@ -36,15 +34,29 @@ public class GreetingClient {
 
     private void doUnary(GreetServiceGrpc.GreetServiceBlockingStub syncClient) {
         System.out.println("Starting gRPC Unary call");
-        Greeting greeting = Greeting.newBuilder()
-                .setFirstName("Sumit")
-                .setLastName("Saha")
-                .build();
         GreetRequest request = GreetRequest.newBuilder()
-                .setGreeting(greeting)
+                .setGreeting(
+                        Greeting.newBuilder()
+                                .setFirstName("Sumit")
+                                .setLastName("Saha")
+                                .build())
                 .build();
         GreetResponse response = syncClient.greet(request);
-
         System.out.println(response.getResult());
+    }
+
+    private void doServerStreaming(GreetServiceGrpc.GreetServiceBlockingStub syncClient) {
+        System.out.println("Starting gRPC Server Streaming call");
+        GreetManyTimesRequest request = GreetManyTimesRequest.newBuilder()
+                .setGreeting(
+                        Greeting.newBuilder()
+                                .setFirstName("Sumit")
+                                .setLastName("Saha")
+                                .build())
+                .build();
+        syncClient.greetManyTimes(request)
+                .forEachRemaining( greetManyTimesResponse -> {
+                    System.out.println(greetManyTimesResponse.getResult());
+                });
     }
 }
