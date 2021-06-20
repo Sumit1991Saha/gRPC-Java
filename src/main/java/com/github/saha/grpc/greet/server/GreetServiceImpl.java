@@ -99,11 +99,6 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
         return new StreamObserver<GreetEveryoneRequest>() {
             @Override
             public void onNext(GreetEveryoneRequest value) {
-                try {
-                    Thread.sleep(3000);
-                } catch (Exception e) {
-
-                }
                 System.out.println("Received request from client :- " + value);
                 Greeting greeting = value.getGreeting();
                 String firstName = greeting.getFirstName();

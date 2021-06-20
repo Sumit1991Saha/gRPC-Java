@@ -25,8 +25,8 @@ public class GreetingClient {
 
         //doUnary(channel);
         //doServerStreaming(channel);
-        doClientStreaming(channel);
-        //doBiDiStreamingCall(channel);
+        //doClientStreaming(channel);
+        doBiDiStreamingCall(channel);
 
         System.out.println("Shutting down channel");
         channel.shutdown();
