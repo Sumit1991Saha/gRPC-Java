@@ -1,13 +1,17 @@
 package com.github.saha.grpc.greet.client;
 
+import com.github.saha.grpc.greet.Constants;
 import com.proto.greet.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import javax.net.ssl.SSLException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -21,16 +25,29 @@ public class GreetingClient {
     }
 
     private void run() throws SSLException, InterruptedException {
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50051)
-                .usePlaintext()
-                .build();
+        ManagedChannel channel;
+        if (Constants.useSSL) {
+            channel = NettyChannelBuilder.forAddress("localhost", 50051)
+                    .sslContext(
+                            GrpcSslContexts.forClient()
+                                    .trustManager(
+                                            new File("ssl/ca.crt")
+                                    )
+                                    .build()
+                    )
+                    .build();
+        } else {
+            channel = ManagedChannelBuilder.forAddress("localhost", 50051)
+                    .usePlaintext()
+                    .build();
+        }
 
-        //doUnary(channel);
+        doUnary(channel);
         //doServerStreaming(channel);
         //doClientStreaming(channel);
         //doBiDiStreamingCall(channel);
         //doSquareError(channel);
-        doUnaryWithDeadline(channel);
+        //doUnaryWithDeadline(channel);
 
         System.out.println("Shutting down channel");
         channel.shutdown();
@@ -223,7 +240,7 @@ public class GreetingClient {
         fetchWithDeadline(200, syncClient);
     }
 
-    private void fetchWithDeadline (int deadlineLimitInMs, GreetServiceGrpc.GreetServiceBlockingStub syncClient) {
+    private void fetchWithDeadline(int deadlineLimitInMs, GreetServiceGrpc.GreetServiceBlockingStub syncClient) {
         try {
             System.out.printf("Sending a request with deadline of %s ms \n", deadlineLimitInMs);
             GreetServiceGrpc.GreetServiceBlockingStub clientWithinDeadline =
