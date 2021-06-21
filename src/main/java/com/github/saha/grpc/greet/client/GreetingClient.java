@@ -3,6 +3,7 @@ package com.github.saha.grpc.greet.client;
 import com.proto.greet.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.net.ssl.SSLException;
@@ -26,7 +27,8 @@ public class GreetingClient {
         //doUnary(channel);
         //doServerStreaming(channel);
         //doClientStreaming(channel);
-        doBiDiStreamingCall(channel);
+        //doBiDiStreamingCall(channel);
+        doSquareError(channel);
 
         System.out.println("Shutting down channel");
         channel.shutdown();
@@ -181,6 +183,29 @@ public class GreetingClient {
         try {
             latch.await(3, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void doSquareError(ManagedChannel channel) {
+        System.out.println("Starting gRPC Unary call for computing square root");
+        //Sync client
+        GreetServiceGrpc.GreetServiceBlockingStub syncClient = GreetServiceGrpc.newBlockingStub(channel);
+
+        computeSquareRoot(syncClient, -10);
+        computeSquareRoot(syncClient, 100);
+    }
+
+    private void computeSquareRoot(GreetServiceGrpc.GreetServiceBlockingStub syncClient, int number) {
+        try {
+            SquareRootRequest request = SquareRootRequest.newBuilder()
+                    .setNumber(number)
+                    .build();
+            SquareRootResponse response = syncClient.squareRoot(request);
+            System.out.printf("Square root of %s is %s \n", number, response.getNumberRoot());
+        } catch (StatusRuntimeException e) {
+            System.out.println("Got an exception for square root");
             e.printStackTrace();
         }
 

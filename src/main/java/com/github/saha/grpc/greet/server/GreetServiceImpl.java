@@ -1,6 +1,7 @@
 package com.github.saha.grpc.greet.server;
 
 import com.proto.greet.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
@@ -123,5 +124,29 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
                 responseObserver.onCompleted();
             }
         };
+    }
+
+    @Override
+    public void squareRoot(SquareRootRequest request, StreamObserver<SquareRootResponse> responseObserver) {
+        Integer number = request.getNumber();
+        if (number >= 0) {
+            double numberRoot = Math.sqrt(number);
+            SquareRootResponse response = SquareRootResponse.newBuilder()
+                    .setNumberRoot(numberRoot)
+                    .build();
+
+            // send the response
+            responseObserver.onNext(response);
+
+            // complete the RPC call
+            responseObserver.onCompleted();
+        } else {
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT
+                            .withDescription("The number being sent is negative")
+                            .augmentDescription("Number sent :- " + number)
+                            .asRuntimeException()
+            );
+        }
     }
 }

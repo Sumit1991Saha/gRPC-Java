@@ -50,6 +50,14 @@ message GreetWithDeadlineResponse {
   string result = 1;
 }
 
+message SquareRootRequest {
+  int32 number = 1;
+}
+
+message SquareRootResponse {
+  double number_root = 1;
+}
+
 service GreetService {
   // Unary
   rpc Greet(GreetRequest) returns (GreetResponse) {};
@@ -62,6 +70,10 @@ service GreetService {
 
   // BiDi Streaming
   rpc GreetEveryone(stream GreetEveryoneRequest) returns (stream GreetEveryoneResponse) {};
+
+  // Error handling
+  // This RPC will throw an exception if a negative no. is sent in request
+  rpc SquareRoot(SquareRootRequest) returns (SquareRootResponse) {};
 
   // Rpc with Deadline
   // this Rpc will complete in no less than 300ms
