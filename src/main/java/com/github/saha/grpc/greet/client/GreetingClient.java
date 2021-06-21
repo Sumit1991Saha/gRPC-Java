@@ -3,6 +3,7 @@ package com.github.saha.grpc.greet.client;
 import com.proto.greet.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
@@ -28,7 +29,8 @@ public class GreetingClient {
         //doServerStreaming(channel);
         //doClientStreaming(channel);
         //doBiDiStreamingCall(channel);
-        doSquareError(channel);
+        //doSquareError(channel);
+        doUnaryWithDeadline(channel);
 
         System.out.println("Shutting down channel");
         channel.shutdown();
@@ -207,6 +209,41 @@ public class GreetingClient {
         } catch (StatusRuntimeException e) {
             System.out.println("Got an exception for square root");
             e.printStackTrace();
+        }
+    }
+
+    private void doUnaryWithDeadline(ManagedChannel channel) {
+        System.out.println("Starting gRPC Unary call with deadline");
+        //Sync client
+        GreetServiceGrpc.GreetServiceBlockingStub syncClient = GreetServiceGrpc.newBlockingStub(channel);
+
+        // Server will respond after 300ms delay, so with 500ms as deadline,
+        // deadline will not exceed but will exceed if the created client has deadline of 200ms ie < 300ms
+        fetchWithDeadline(1000, syncClient);
+        fetchWithDeadline(200, syncClient);
+    }
+
+    private void fetchWithDeadline (int deadlineLimitInMs, GreetServiceGrpc.GreetServiceBlockingStub syncClient) {
+        try {
+            System.out.printf("Sending a request with deadline of %s ms \n", deadlineLimitInMs);
+            GreetServiceGrpc.GreetServiceBlockingStub clientWithinDeadline =
+                    syncClient.withDeadlineAfter(deadlineLimitInMs, TimeUnit.MILLISECONDS);
+
+            GreetWithDeadlineRequest request = GreetWithDeadlineRequest.newBuilder()
+                    .setGreeting(
+                            Greeting.newBuilder()
+                                    .setFirstName("Sumit")
+                                    .setLastName("Saha " + deadlineLimitInMs)
+                                    .build())
+                    .build();
+            GreetWithDeadlineResponse response = clientWithinDeadline.greetWithDeadline(request);
+            System.out.println(response.getResult());
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus() == Status.DEADLINE_EXCEEDED) {
+                System.out.println("Deadline has been exceeded, we don't want the response");
+            } else {
+                e.printStackTrace();
+            }
         }
 
     }

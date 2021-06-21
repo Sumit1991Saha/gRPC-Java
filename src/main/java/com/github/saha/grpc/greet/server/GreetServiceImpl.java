@@ -1,6 +1,7 @@
 package com.github.saha.grpc.greet.server;
 
 import com.proto.greet.*;
+import io.grpc.Context;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
@@ -148,5 +149,41 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
                             .asRuntimeException()
             );
         }
+    }
+
+    @Override
+    public void greetWithDeadline(GreetWithDeadlineRequest request, StreamObserver<GreetWithDeadlineResponse> responseObserver) {
+
+        Context currentContext = Context.current();
+        try {
+            for (int i =0; i < 3; ++i) {
+                if (!currentContext.isCancelled()) {
+                    System.out.println("Sleep for 100ms");
+                    Thread.sleep(100);
+                } else {
+                    System.out.println("Deadline expired, hence returning");
+                    responseObserver.onError(
+                            Status.CANCELLED.
+                                    withDescription("Cancelled by client")
+                                    .asRuntimeException()
+                    );
+                    return;
+                }
+            }
+            System.out.println("Sending Response");
+            // create the response
+            GreetWithDeadlineResponse response = GreetWithDeadlineResponse.newBuilder()
+                    .setResult("Hello" + request.getGreeting().getFirstName() + request.getGreeting().getLastName())
+                    .build();
+
+            // send the response
+            responseObserver.onNext(response);
+
+            // complete the RPC call
+            responseObserver.onCompleted();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 }
