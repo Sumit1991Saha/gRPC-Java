@@ -1,0 +1,1 @@
+This project uses protobuf for encoding format for gRPC communication
